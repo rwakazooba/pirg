@@ -27,3 +27,6 @@ for l in csv_download.split('\n')[1:2]:
     data = line.split(',')
     print data[0]
     print data
+# Samuel, could we have data downloaded in to the parent directory as a csv,
+
+# then reading csv files from this point on would be simpler, efforts to work with this object have been not so successful.
