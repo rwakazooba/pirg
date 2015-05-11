@@ -1,4 +1,3 @@
-# coding: utf-8
 import tempfile
 import requests
 import pandas as pd
@@ -112,105 +111,13 @@ Months['nov'] = [6, 7, 8]
 Months['dec'] = [7, 8, 9]
 
 
-def ANC_report(id, interval):
-    "ANC_report(id,interval)-- This takes an id and interval interms of shorthand months of the year --E.g ANC_report('cK5zkZIUFsN','jan')"
-    mytype = WholeTree['ANC'][id]
-    mynewtype = []
-    x = 0
-    for i in range(0, len(mytype), 2):
-        mynewtype.append(mytype[i])
-    remapped = np.nan_to_num(mynewtype)
-    for i in Months[interval]:
-        x += remapped[i]
-    print "Average ANC :", "for", interval, x / 3.00
-    #  return x/3.00
-# start of comparison report bit of the function
-    mytypeComp = WholeTree['ANC'][id]
-    mynewtypeComp = []
-    xComp = 0
-    for i in range(0, len(mytypeComp), 2):
-        mynewtypeComp.append(mytypeComp[i])
-    remapped = np.nan_to_num(mynewtypeComp)
-    for i in Months[Mappings[interval]]:
-        xComp += remapped[i]
-    print "Average ANC-Past Report For:", Mappings[interval], xComp / 3.00
-    #  return xComp/3.00
-# start of completeness report for ANC
-    mytype = WholeTree['ANC'][id]
-    mynewtype = []
-    truetest = []
-    x = 0
-    for i in range(0, len(mytype), 2):
-        mynewtype.append(mytype[i])
-    remapped = np.isnan(mynewtype)
-    for i in Months[interval]:
-        truetest.append(remapped[i])
-    remappednum = truetest.count(False)
-    print "Average ANC-Completeness:", (remappednum / 3.00) * 100, "%"
-    # return (remappednum/3.00)*100
-
-
-def PVC_report(id, interval):
-    "PVC_report(id,interval)-- This takes an id and interval interms of shorthand months of the year --E.g PVC_report('cK5zkZIUFsN','jan')"
-    mytype = WholeTree['PVC'][id]
-    x = 0
-    remapped = np.nan_to_num(mytype)
-    for i in Months[interval]:
-        x += remapped[i]
-    print "Average PVC For:", interval, x / 3.00
-# start of comparison of PVC past Month's report
-    mytype = WholeTree['PVC'][id]
-    x = 0
-    remapped = np.nan_to_num(mytype)
-    for i in Months[Mappings[interval]]:
-        x += remapped[i]
-    print "Average PVC-Past Report For :", Mappings[interval], x / 3.00
-# start of comparison of Completeness of PVC past Month's report
-    mytype = WholeTree['PVC'][id]
-    truetest = []
-    x = 0.0000
-    remapped = np.isnan(mytype)
-    remapped = list(remapped)
-    for i in Months[interval]:
-        truetest.append(remapped[i])
-    x = truetest.count(False)
-    print "Average PVC-Completeness:", (x / 3.00) * 100, "%"
-
-
-def Deliv_report(id, interval):
-    "Deliv_report(id,interval)-- This takes an id and interval interms of shorthand months of the year --E.g Deliv_report('cK5zkZIUFsN','jan')"
-    mytype = WholeTree['Deliv'][id]
-    x = 0
-    remapped = np.nan_to_num(mytype)
-    for i in Months[interval]:
-        x += remapped[i]
-    print "Average Deliveries For:", interval, x / 3.00
-# start of comparison for the Past Months Deliveries report
-    mytype = WholeTree['Deliv'][id]
-    x = 0
-    remapped = np.nan_to_num(mytype)
-    for i in Months[Mappings[interval]]:
-        x += remapped[i]
-    print "Average Deliveries- Past Report For :", Mappings[interval], x / 3.00
-# start of comparison of Completeness of Deliveries for Month's report
-    mytype = WholeTree['Deliv'][id]
-    truetest = []
-    x = 0.0000
-    remapped = np.isnan(mytype)
-    remapped = list(remapped)
-    for i in Months[interval]:
-        truetest.append(remapped[i])
-    x = truetest.count(False)
-    print "Average Deliveries-Completeness:", (x / 3.00) * 100, "%"
-
-
 def ord(n):
     return str(int(n)) + ("th" if 4 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th"))
 
 
-def CombinedReport(id, interval):
+def CombinedReport(id, interval, tree):
     "CombinedReport(id,interval)-- This takes an id and interval interms of shorthand months of the year --E.g CombinedReport('cK5zkZIUFsN','jan')"
-    mytype = WholeTree['ANC'][id]
+    mytype = tree['ANC'][id]
     mynewtype = []
     x = 0
     for i in range(0, len(mytype), 2):
@@ -220,7 +127,7 @@ def CombinedReport(id, interval):
         x += remapped[i]
     A = x / 3.00
 # start of comparison report bit of the function
-    mytypeComp = WholeTree['ANC'][id]
+    mytypeComp = tree['ANC'][id]
     mynewtypeComp = []
     xComp = 0
     for i in range(0, len(mytypeComp), 2):
@@ -230,7 +137,7 @@ def CombinedReport(id, interval):
         xComp += remapped[i]
     B = xComp / 3.00
 # start of completeness report for ANC
-    mytype = WholeTree['ANC'][id]
+    mytype = tree['ANC'][id]
     mynewtype = []
     truetest = []
     x = 0
@@ -241,21 +148,21 @@ def CombinedReport(id, interval):
         truetest.append(remapped[i])
     remappednum = truetest.count(False)
     C = (remappednum / 3.00) * 100
-    mytype = WholeTree['PVC'][id]
+    mytype = tree['PVC'][id]
     x = 0
     remapped = np.nan_to_num(mytype)
     for i in Months[interval]:
         x += remapped[i]
     D = x / 3.00
 # start of comparison of PVC past Month's report
-    mytype = WholeTree['PVC'][id]
+    mytype = tree['PVC'][id]
     x = 0
     remapped = np.nan_to_num(mytype)
     for i in Months[Mappings[interval]]:
         x += remapped[i]
     E = x / 3.00
 # start of comparison of Completeness of PVC past Month's report
-    mytype = WholeTree['PVC'][id]
+    mytype = tree['PVC'][id]
     truetest = []
     x = 0.0000
     remapped = np.isnan(mytype)
@@ -264,21 +171,21 @@ def CombinedReport(id, interval):
         truetest.append(remapped[i])
     x = truetest.count(False)
     F = (x / 3.00) * 100
-    mytype = WholeTree['Deliv'][id]
+    mytype = tree['Deliv'][id]
     x = 0
     remapped = np.nan_to_num(mytype)
     for i in Months[interval]:
         x += remapped[i]
     G = x / 3.00
 # start of comparison for the Past Months Deliveries report
-    mytype = WholeTree['Deliv'][id]
+    mytype = tree['Deliv'][id]
     x = 0
     remapped = np.nan_to_num(mytype)
     for i in Months[Mappings[interval]]:
         x += remapped[i]
     H = x / 3.00
 # start of comparison of Completeness of Deliveries for Month's report
-    mytype = WholeTree['Deliv'][id]
+    mytype = tree['Deliv'][id]
     truetest = []
     x = 0.0000
     remapped = np.isnan(mytype)
@@ -289,7 +196,7 @@ def CombinedReport(id, interval):
     I = (x / 3.00) * 100
     RankDict = {}
     RankInitial = []
-    RankInitial.append(ANC_reportRank(id, interval))
+    RankInitial.append(ANC_reportRank(id, interval, tree))
     c = RowToSub[id]
     total = 0
     for i in check:
@@ -297,7 +204,7 @@ def CombinedReport(id, interval):
     k = result.shape[0]
     for j in range(k):
         p = result.values[j][0]
-        RankDict[p] = ANC_reportRank(p, interval)
+        RankDict[p] = ANC_reportRank(p, interval, tree)
         total += 1
     del RankDict[id]
     RankList = RankDict.values()
@@ -311,12 +218,10 @@ def CombinedReport(id, interval):
     return A, B, C, D, E, F, G, H, I, L
 
 
-# In[11]:
-
-def ANC_reportRank(id, interval):
+def ANC_reportRank(id, interval, tree):
     """ANC_reportRank(id,interval)-- This takes an id and interval interms of shorthand "
     months of the year --E.g ANC_reportRank('cK5zkZIUFsN','jan')"""
-    mytype = WholeTree['ANC'][id]
+    mytype = tree['ANC'][id]
     mynewtype = []
     Q = 0
     for i in range(0, len(mytype), 2):
@@ -325,13 +230,13 @@ def ANC_reportRank(id, interval):
     for i in Months[interval]:
         Q += remapped[i]
     Q = Q / 3
-    mytype = WholeTree['PVC'][id]
+    mytype = tree['PVC'][id]
     P = 0
     remapped = np.nan_to_num(mytype)
     for i in Months[interval]:
         P += remapped[i]
     P = P / 3
-    mytype = WholeTree['Deliv'][id]
+    mytype = tree['Deliv'][id]
     R = 0
     remapped = np.nan_to_num(mytype)
     for i in Months[interval]:
@@ -339,78 +244,27 @@ def ANC_reportRank(id, interval):
     R = R / 3
     return R + Q + P
 
-
-# In[22]:
-
-def Ranking(a, b):
-    RankDict = {}
-    RankInitial = []
-    RankInitial.append(ANC_reportRank(a, b))
-    c = RowToSub[a]
-    total = 0.00
-    for i in check:
-        result = check.get_group(c)
-    k = result.shape[0]
-    for j in range(k):
-        p = result.values[j][0]
-        RankDict[p] = ANC_reportRank(p, b)
-        total += 1
-    del RankDict[a]
-    RankList = RankDict.values()
-    for x in RankList:
-        RankInitial.append(x)
-    RankPosition = Series(RankInitial)
-    RankFinal = RankPosition.rank(method='min')[0]
-    # print 'Ranked:',ord(RankFinal),'on a scale of:', total
-    return RankFinal
-
-ANC_report('cK5zkZIUFsN', 'may')
-
-
-def Report(id, interval):
-    ANC_report(id, interval)
-    PVC_report(id, interval)
-    Deliv_report(id, interval)
-    Ranking(id, interval)
-
-int(Ranking('cK5zkZIUFsN', 'apr'))
-
-
-def GeneralReport(interval):
-    "This function takes an interval and returns all the results as turples; E.g run GeneralReport('jan')"
-    ReportCard = {}
-    for i in range(myrows):
-        id = value.values[i][0]
-        ReportCard[value.values[i][0]] = CombinedReport(id, interval)
-    return ReportCard
-
-
-# In[17]:
-
 IntroText1 = "Sample Introduction: Your facility is selected to receive performance reports.\nEvery month a report will arrive that compares your performance this month to the previous month.+10% means an increase. -10% means a decrease.\n Work to improve your facility every day, we’ll be watching!"
 IntroText2 = "Sample Introduction: Your facility is selected to receive performance reports.\nEvery month a report will arrive that compares your performance this month to the previous month. +10% means an increase. -10% means a decrease.\nYou will be compared to other facilities in the subcounty.\nWork to improve your facility every day, we’ll be watching!"
 PositiveScore = "Great job, keep up the good work!"
 NegativeScore = "You’re slipping behind, work together to improve performance!"
 Position = "Work to improve to be #1!"
 
-
-# In[31]:
-
-def ReportFormat(key, month, group):
-    ANCScore = CombinedReport(key, month)[0]
-    PCVScore = CombinedReport(key, month)[4]
-    DelivScore = CombinedReport(key, month)[7]
-    Reporting = ((CombinedReport(key, month)[2] + CombinedReport(key, month)[5] + CombinedReport(key, month)[8]) / 300) * 100
+def ReportFormat(key, period, tree, group):
+    ANCScore = CombinedReport(key, period, tree)[0]
+    PCVScore = CombinedReport(key, period, tree)[4]
+    DelivScore = CombinedReport(key, period, tree)[7]
+    Reporting = ((CombinedReport(key, period, tree)[2] + CombinedReport(key, period, tree)[5] + CombinedReport(key, period, tree)[8]) / 300) * 100
     TotalScore = ANCScore + PCVScore + DelivScore
-    RankPosition = CombinedReport(key, month)[9][0]
-    RankPositionOf = CombinedReport(key, month)[9][1]
-    RankPositionTot = CombinedReport(key, month)[9][2]
-    RankPositionval = int(Ranking(key, month))
-    ANCScorePast = CombinedReport(key, month)[1]
-    PCVScorePast = CombinedReport(key, month)[5]
-    DelivScorePast = CombinedReport(key, month)[8]
+    RankPosition = CombinedReport(key, period, tree)[9][0]
+    RankPositionOf = CombinedReport(key, period, tree)[9][1]
+    RankPositionTot = CombinedReport(key, period, tree)[9][2]
+    RankPositionval = int(Ranking(key, period, tree))
+    ANCScorePast = CombinedReport(key, period, tree)[1]
+    PCVScorePast = CombinedReport(key, period, tree)[5]
+    DelivScorePast = CombinedReport(key, period, tree)[8]
     TotalScorePast = ANCScorePast + PCVScorePast + DelivScorePast
-    print "Month -{0}: Report-Total Score {1},  ANC1 {2},  DELIVERY {3},  PCV3 {4}".format(month, TotalScore, ANCScore, DelivScore, PCVScore)
+    print "Month -{0}: Report-Total Score {1:.2f},  ANC1 {2:.2f},  DELIVERY {3:.2f},  PCV3 {4:.2f}".format(period, TotalScore, ANCScore, DelivScore, PCVScore)
     print "Reporting Rate {0}".format(Reporting) + "%"
     if group == 1:
         if TotalScorePast < TotalScore:
@@ -432,4 +286,26 @@ def ReportFormat(key, month, group):
     else:
         pass
 
-ReportFormat('cxWQMqqkkAF', 'apr', 1)
+def Ranking(a, b, tree):
+    RankDict = {}
+    RankInitial = []
+    RankInitial.append(ANC_reportRank(a, b, tree))
+    c = RowToSub[a]
+    total = 0.00
+    for i in check:
+        result = check.get_group(c)
+    k = result.shape[0]
+    for j in range(k):
+        p=result.values[j][0]
+        RankDict[p] = ANC_reportRank(p, b, tree)
+        total += 1
+    del RankDict[a]
+    RankList = RankDict.values()
+    for x in RankList:
+        RankInitial.append(x)
+    RankPosition = Series(RankInitial)
+    RankFinal = RankPosition.rank(method='min')[0]
+    # print 'Ranked:',ord(RankFinal),'on a scale of:', total
+    return RankFinal
+
+ReportFormat('imFgSY3OUvZ', 'apr', WholeTree, 1)
