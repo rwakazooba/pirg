@@ -1,0 +1,26 @@
+config = {
+    # DHIS2 Confs
+    'dhis2_user': '',
+    'dhis2_passwd': '',
+    'base_url': 'http://dhis2-server-ip/api/analytics.csv?',
+    'orgunits_url': 'http://dhis2-server-ip/api/organisationUnits',
+    # DB Confs
+    'dbname': 'pir',
+    'dbuser': 'postgres',
+    'dbpasswd': '',
+    'dbhost': 'localhost',
+    'dbport': '5432',
+    # SMS Confs
+    'smsuser': '',
+    'smspasswd': '',
+    'smsurl': 'http:/localhost:9090/facilitysms',
+    # PIR Confs
+    'default_group': 1,
+    'facility_report_template': (
+        "%(month)s Report: Total score %(total_score).2f%%, 1stANC %(anc_score).2f%% "
+        ", Delivery %(delivery_score).2f%%, PCV3 %(pcv_score).2f%% "),
+    'positive_comment': "Great job, keep up the good work!",
+    'negative_comment': "You're slipping behind, work together to improve performance!",
+    'position_comment': "Your facility is currently the %(position)s in your subcounty.",
+    'improve_comment': "Work to harder and become number 1!"
+}
