@@ -14,3 +14,4 @@ script.log
 .ropeproject/
 .codeintel/
 .vagrant
+settings.py
