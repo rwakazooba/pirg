@@ -292,7 +292,7 @@ def ReportFormat(key, period, tree, group):
             if Reporting > 0:
                 ret['comment'] = config["position_comment"] % ret + config["improve_comment"]  # we can print the comment
             else:
-                ret['comment'] = "Please make sure you report on 1stANC, PCV3 and Delivery"
+                ret['comment'] = config["no_report_comment"]
     elif group == 3:
         if RankPositionval == 1 and Reporting > 0:
             ret['comment'] = config["positive_comment"]
@@ -300,7 +300,7 @@ def ReportFormat(key, period, tree, group):
             if Reporting > 0:
                 ret['comment'] = config["position_comment"] % ret + config["improve_comment"]
             else:
-                ret['comment'] = "Please make sure you report on 1stANC, PCV3 and Delivery"
+                ret['comment'] = config["no_report_comment"]
     else:
         pass
     return ret
@@ -403,7 +403,7 @@ for r in res:
                 facility_uuid = ''
         # only generate report if we have a valid facility uuid
         if facility_uuid:
-            report = ReportFormat(facilityid, current_month, WholeTree, 1)
+            report = ReportFormat(facilityid, current_month, WholeTree, 2)
             message = config["facility_report_template"] % report
             params = {
                 'fuuid': facility_uuid,
