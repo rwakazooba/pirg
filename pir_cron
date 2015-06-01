@@ -1,0 +1,4 @@
+# [ $(date +%d) -eq $(cal | awk '{print $5}' | grep -E '[0-9]' | tail -n 1) ]
+# run this every last thursay of the month at 10:00 AM
+0 10 * *  thur [ `date +%d` -eq `cal | awk '{print $5}' | grep -E '[0-9]' | tail -n 1` ] &&
+    /var/www/env/dev/bin/python /home/sam/pirg/interapp2.py
