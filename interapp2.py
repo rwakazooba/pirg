@@ -9,6 +9,7 @@ import datetime
 import psycopg2
 import psycopg2.extras
 import json
+import simplejson
 
 user = config['dhis2_user']
 passwd = config['dhis2_passwd']
@@ -58,6 +59,10 @@ Months['oct'] = [5, 6, 7]
 Months['nov'] = [6, 7, 8]
 Months['dec'] = [7, 8, 9]
 
+# To handle Json in DB well
+psycopg2.extras.register_default_json(loads=lambda x: x)
+psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)
+
 
 def get_url(url):
     res = requests.get(url, params=payload, auth=(user, passwd))
@@ -76,8 +81,8 @@ def read_csv_to_file(url):
     return pobj
 
 
-def send_facility_sms(msg, params):  # params has the facility uuid and other params
-    res = requests.get(config["smsurl"], params=params, auth=(config["smsuser"], config["smspasswd"]))
+def send_facility_sms(params):  # params has the facility uuid and other params
+    res = requests.get(config["smsurl"], params=params)
     return res.text
 
 
@@ -88,6 +93,22 @@ def read_csv_to_file2(url):
 
 def ord(n):
     return str(int(n)) + ("th" if 4 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th"))
+
+
+def save_facility_record(conn, cur, fuuid, record):
+    if "comment" in record:
+        record.pop("comment")
+    if "month" in record:
+        record.pop("month")
+    cur.execute("SELECT previous_values::text FROM facilities WHERE uuid = %s", [fuuid])
+    res = cur.fetchone()
+    if res:
+        prev_vals = json.loads(res['previous_values'])
+        prev_vals['%s' % datetime.datetime.now().strftime('%Y-%m')] = record
+        cur.execute(
+            "UPDATE facilities SET previous_values = %s WHERE uuid = %s",
+            [psycopg2.extras.Json(prev_vals, dumps=simplejson.dumps), fuuid])
+        conn.commit()
 
 
 def CombinedReport(id, interval, tree):
@@ -251,11 +272,11 @@ def ReportFormat(key, period, tree, group):
     TotalScorePast = ANCScorePast + PCVScorePast + DelivScorePast
     ret = {
         'month': current_month.capitalize(),
-        'total_score': TotalScore,
-        'anc_score': ANCScore,
-        'delivery_score': DelivScore,
-        'pcv_score': PCVScore,
-        'reporting_rate': Reporting,
+        'total_score': float(TotalScore.__format__('.2f')),
+        'anc_score': float(ANCScore.__format__('.2f')),
+        'delivery_score': float(DelivScore.__format__('.2f')),
+        'pcv_score': float(PCVScore.__format__('.2f')),
+        'reporting_rate': float(Reporting.__format__('.2f')),
         'position': RankPosition,
         'comment': ''
     }
@@ -382,8 +403,16 @@ for r in res:
                 facility_uuid = ''
         # only generate report if we have a valid facility uuid
         if facility_uuid:
-            report = ReportFormat(facilityid, current_month, WholeTree, 3)
+            report = ReportFormat(facilityid, current_month, WholeTree, 1)
             message = config["facility_report_template"] % report
-            print message
+            params = {
+                'fuuid': facility_uuid,
+                'text': message,
+                'username': config['smsuser'],
+                'password': config['smspasswd'],
+                'district': r["name"],
+            }
+            send_facility_sms(params)
+            save_facility_record(conn, cur, facility_uuid, report)
 
 conn.close()
