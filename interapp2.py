@@ -116,27 +116,54 @@ def CombinedReport(id, interval, tree):
     months of the year --E.g CombinedReport('cK5zkZIUFsN','jan')"""
     mytype = tree['ANC'][id]
     mynewtype = []
+    mynewtype1st = []
     x = 0
     for i in range(0, len(mytype), 2):
         mynewtype.append(mytype[i])
     remapped = np.nan_to_num(mynewtype)
     for i in Months[interval]:
         x += remapped[i]
-    A = x / 3.00
-# start of comparison report bit of the function
+    A = x
+    # adding in line 128 to line 133 to differenciate ANC1stvisit ....
+    # from ANC4th Visit
+    for i in range(1, len(mytype), 2):
+        mynewtype1st.append(mytype[i])
+    auxlist = np.nan_to_num(mynewtype1st)
+    for i in Months[interval]:
+        alpha += auxlist[i]
+    anc_alpha = alpha
+# start of comparison report bit of the function; that is ANC1st ...
+# visit and ANC4th visit
     mytypeComp = tree['ANC'][id]
     mynewtypeComp = []
+    mynewtypeComp1st = []
     xComp = 0
+    xcomp1st = 0
     for i in range(0, len(mytypeComp), 2):
         mynewtypeComp.append(mytypeComp[i])
     remapped = np.nan_to_num(mynewtypeComp)
     for i in Months[Mappings[interval]]:
         xComp += remapped[i]
-    B = xComp / 3.00
+    B = xComp
+    if A > 0:
+        ANC4thCompare = (float(B - A) / A) * 100
+    elif B > 0:
+        ANC4thCompare = 100
+    else :
+        ANC4thCompare = 0
+    # comparison for ANC1st visit
+    for i in range(1, len(mytypeComp), 2):
+        mynewtypeComp1st.append(mytypeComp[i])
+    auxremapped = np.nan_to_num(mynewtypeComp1st)
+    for i in Months[Mappings[interval]]:
+        xcomp1st += auxremapped[i]
+    anc_comp = xcomp1st
 # start of completeness report for ANC
     mytype = tree['ANC'][id]
     mynewtype = []
     truetest = []
+    truetest1st = []
+    mynewtypecomplete = []
     x = 0
     for i in range(0, len(mytype), 2):
         mynewtype.append(mytype[i])
@@ -144,20 +171,33 @@ def CombinedReport(id, interval, tree):
     for i in Months[interval]:
         truetest.append(remapped[i])
     remappednum = truetest.count(False)
-    C = (remappednum / 3.00) * 100
+    C = remappednum
+    for i in range(1, len(mytype), 2):
+        mynewtypecomplete.append(mytype[i])
+    remappedcomplete = np.isnan(mynewtype)
+    for i in Months[interval]:
+        truetest1st.append(remapped[i])
+    remappednumcomplete = truetest1st.count(False)
+    C_complete = remappednumcomplete
     mytype = tree['PVC'][id]
     x = 0
     remapped = np.nan_to_num(mytype)
     for i in Months[interval]:
         x += remapped[i]
-    D = x / 3.00
+    D = x
 # start of comparison of PVC past Month's report
     mytype = tree['PVC'][id]
     x = 0
     remapped = np.nan_to_num(mytype)
     for i in Months[Mappings[interval]]:
         x += remapped[i]
-    E = x / 3.00
+    E = x
+    if E > 0:
+        PVCCompare = (float(E - D) / D) * 100
+    elif D > 0:
+        PVCCompare = 100
+    else :
+        PVCCompare = 0
 # start of comparison of Completeness of PVC past Month's report
     mytype = tree['PVC'][id]
     truetest = []
@@ -167,20 +207,26 @@ def CombinedReport(id, interval, tree):
     for i in Months[interval]:
         truetest.append(remapped[i])
     x = truetest.count(False)
-    F = (x / 3.00) * 100
+    F = x
     mytype = tree['Deliv'][id]
     x = 0
     remapped = np.nan_to_num(mytype)
     for i in Months[interval]:
         x += remapped[i]
-    G = x / 3.00
+    G = x
 # start of comparison for the Past Months Deliveries report
     mytype = tree['Deliv'][id]
     x = 0
     remapped = np.nan_to_num(mytype)
     for i in Months[Mappings[interval]]:
         x += remapped[i]
-    H = x / 3.00
+    H = x
+    if G > 0:
+        DelivCompare = (float(H - G) / G) * 100
+    elif H > 0:
+        DelivCompare = 100
+    else :
+        DelivCompare = 0
 # start of comparison of Completeness of Deliveries for Month's report
     mytype = tree['Deliv'][id]
     truetest = []
@@ -190,10 +236,19 @@ def CombinedReport(id, interval, tree):
     for i in Months[interval]:
         truetest.append(remapped[i])
     x = truetest.count(False)
-    I = (x / 3.00) * 100
+    I = x
+    # Now we'll come up with a general completeness calculation:
+    # This takes a count of the True values amongst all variables, divided by 12:
+    # that is 4 variables over 3 months;
+    truesum = I + F + C_complete + C
+    truesum_complete = float(truesum / 12) * 100
     RankDict = {}
     RankInitial = []
     RankInitial.append(ANC_reportRank(id, interval, tree))
+    # The rank of id is first added to the RankInitial List, later to be de-duplicated..
+    # since the loop in row 204 runs for all id's including the id we just submitted.
+    # considering the rank method returns ranks by position, id's rank is thus read off...
+    # from position 0.
     c = RowToSub[id]
     total = 0
     for i in check:
@@ -212,34 +267,71 @@ def CombinedReport(id, interval, tree):
     J = RankFinal
     K = total
     L = ord(J), ':of', K
-    return A, B, C, D, E, F, G, H, I, L
+    return A, anc_alpha, D, G, truesum_complete, L
+
+
+xrand = np.random.randint(1, 5, size=1)
+randomdict = {1:'ANC',2:'ANC',3:'Deliv',4:'PVC'}
 
 
 def ANC_reportRank(id, interval, tree):
-    """ANC_reportRank(id,interval)-- This takes an id and interval interms of shorthand "
-    months of the year --E.g ANC_reportRank('cK5zkZIUFsN','jan')"""
-    mytype = tree['ANC'][id]
+    """ANC_reportRank(id,interval, tree)-- This takes an id and interval interms of shorthand "
+    months of the year --E.g ANC_reportRank('cK5zkZIUFsN','jan', WholeTree)"""
+    # Given the change proposed by Zac, i.e randomization of comparison variables, need arose
+    # to add a few lines to generate a random number.
+    # As you may notice from above, key 1, and 2 of the dict refer to the same value...
+    # this was mainly due to an earlier merge of the two, fixing this in the entire "WholeTree"
+    # dict would be tedious hence the workaround below...
+    mytype = tree[randomdict[xrand[0]]][id]
     mynewtype = []
     Q = 0
-    for i in range(0, len(mytype), 2):
-        mynewtype.append(mytype[i])
-    remapped = np.nan_to_num(mynewtype)
-    for i in Months[interval]:
-        Q += remapped[i]
-    Q = Q / 3
-    mytype = tree['PVC'][id]
     P = 0
-    remapped = np.nan_to_num(mytype)
-    for i in Months[interval]:
-        P += remapped[i]
-    P = P / 3
-    mytype = tree['Deliv'][id]
-    R = 0
-    remapped = np.nan_to_num(mytype)
-    for i in Months[interval]:
-        R += remapped[i]
-    R = R / 3
-    return R + Q + P
+    if xrand[0] == 1:
+        xrandaplha = 0
+        for i in range(xrandaplha, len(mytype), 2):
+            mynewtype.append(mytype[i])
+        remapped = np.nan_to_num(mynewtype)
+        for i in Months[interval]:
+            Q += remapped[i]
+        for i in Months[Mappings[interval]]:
+            xp += remapped[i]
+        if xp > 0:
+            Compare = (float(Q - xp) / xp) * 100
+        elif Q > 0:
+            Compare = 100
+        else :
+            Compare = 0
+        Q = Compare
+    elif xrand[0] == 2:
+        xrandaplha = 1
+        for i in range(xrandaplha, len(mytype), 2):
+            mynewtype.append(mytype[i])
+        remapped = np.nan_to_num(mynewtype)
+        for i in Months[interval]:
+            Q += remapped[i]
+        for i in Months[Mappings[interval]]:
+            xp += remapped[i]
+        if xp > 0:
+            Compare = (float(Q - xp) / xp) * 100
+        elif Q > 0:
+            Compare = 100
+        else :
+            Compare = 0
+        Q = Compare
+    else:
+        remapped = np.nan_to_num(mytype)
+        for i in Months[interval]:
+            P += remapped[i]
+        for i in Months[Mappings[interval]]:
+            xp += remapped[i]
+        if xp > 0:
+            Compare = (float(P - xp) / xp) * 100
+        elif P > 0:
+            Compare = 100
+        else :
+            Compare = 0
+        P = Compare
+    return Q + P
 
 IntroText1 = (
     "Sample Introduction: Your facility is selected to receive performance reports."
