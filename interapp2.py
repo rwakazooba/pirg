@@ -13,15 +13,6 @@ import simplejson
 
 user = config['dhis2_user']
 passwd = config['dhis2_passwd']
-BASE_URL = config['base_url']
-BASE_URL = BASE_URL + "dimension=pe:LAST_12_MONTHS&dimension=dx:yTtv6wuTWUN;eGSUL2aL0zW;OWJ3hkJ9VYA;iNVDqc0xKi0"
-BASE_URL = BASE_URL + "&dimension=ou:LEVEL-5;%s"
-payload = {
-    "filter": "u8EjsUj11nz:jTolsq2vJv8;GM7GlqjfGAW;luVzKLwlHJV",
-    "tableLayout": "true",
-    "columns": "pe;dx",
-    "rows": "ou",
-}
 
 # the month for which we're generating the reports
 current_month = datetime.datetime.now().strftime('%B').lower()[:3]
@@ -62,6 +53,38 @@ Months['dec'] = [7, 8, 9]
 # To handle Json in DB well
 psycopg2.extras.register_default_json(loads=lambda x: x)
 psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)
+
+
+def generate_period_string():
+    """Return 3 months period string for both the current report
+    and similar report a year ago
+    e.g 201404;201405;201406;201504;201505;201506 for July 2015"""
+    t = datetime.now()
+    year = t.year
+    month = t.month
+    if month <= 3:
+        third = (month - 3) % 12 if (month - 3) < 0 else 12 if (month - 3) == 0 else (month - 3)
+        second = (month - 2) % 12 if (month - 2) < 0 else 12 if (month - 2) == 0 else (month - 2)
+        first = (month - 1) % 12 if (month - 1) < 0 else 12 if (month - 1) == 0 else (month - 1)
+
+        str1 = "%s%02d;%s%02d;%s%02d" % (year - 1, third, year - 1, second, year - 1, first)
+        str2 = "%s%02d;%s%02d;%s%02d" % (year, third, year, second, year, first)
+    else:
+        str1 = "%s%02d;%s%02d;%s%02d" % (year - 1, month - 3, year - 1, month - 2, year - 1, month - 1)
+        str2 = "%s%02d;%s%02d;%s%02d" % (year, month - 3, year, month - 2, year, month - 1)
+    return "%s;%s" % (str1, str2)
+
+
+# BASE_URL will actuall point to the pivot table download we need
+BASE_URL = config['base_url']
+BASE_URL = BASE_URL + "dimension=pe:%s&" % generate_period_string()
+BASE_URL = BASE_URL + "dimension=dx:yTtv6wuTWUN;eGSUL2aL0zW;OWJ3hkJ9VYA;iNVDqc0xKi0&dimension=ou:LEVEL-5;%s"
+payload = {
+    "filter": "u8EjsUj11nz:jTolsq2vJv8;GM7GlqjfGAW;luVzKLwlHJV",
+    "tableLayout": "true",
+    "columns": "pe;dx",
+    "rows": "ou",
+}
 
 
 def get_url(url):
@@ -149,7 +172,7 @@ def CombinedReport(id, interval, tree):
         ANC4thCompare = (float(B - A) / A) * 100
     elif B > 0:
         ANC4thCompare = 100
-    else :
+    else:
         ANC4thCompare = 0
     # comparison for ANC1st visit
     for i in range(1, len(mytypeComp), 2):
@@ -196,7 +219,7 @@ def CombinedReport(id, interval, tree):
         PVCCompare = (float(E - D) / D) * 100
     elif D > 0:
         PVCCompare = 100
-    else :
+    else:
         PVCCompare = 0
 # start of comparison of Completeness of PVC past Month's report
     mytype = tree['PVC'][id]
@@ -225,7 +248,7 @@ def CombinedReport(id, interval, tree):
         DelivCompare = (float(H - G) / G) * 100
     elif H > 0:
         DelivCompare = 100
-    else :
+    else:
         DelivCompare = 0
 # start of comparison of Completeness of Deliveries for Month's report
     mytype = tree['Deliv'][id]
@@ -271,7 +294,7 @@ def CombinedReport(id, interval, tree):
 
 
 xrand = np.random.randint(1, 5, size=1)
-randomdict = {1:'ANC',2:'ANC',3:'Deliv',4:'PVC'}
+randomdict = {1: 'ANC', 2: 'ANC', 3: 'Deliv', 4: 'PVC'}
 
 
 def ANC_reportRank(id, interval, tree):
@@ -299,7 +322,7 @@ def ANC_reportRank(id, interval, tree):
             Compare = (float(Q - xp) / xp) * 100
         elif Q > 0:
             Compare = 100
-        else :
+        else:
             Compare = 0
         Q = Compare
     elif xrand[0] == 2:
@@ -315,7 +338,7 @@ def ANC_reportRank(id, interval, tree):
             Compare = (float(Q - xp) / xp) * 100
         elif Q > 0:
             Compare = 100
-        else :
+        else:
             Compare = 0
         Q = Compare
     else:
@@ -328,7 +351,7 @@ def ANC_reportRank(id, interval, tree):
             Compare = (float(P - xp) / xp) * 100
         elif P > 0:
             Compare = 100
-        else :
+        else:
             Compare = 0
         P = Compare
     return Q + P
