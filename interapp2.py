@@ -24,64 +24,23 @@ pvcList = [4, 8, 12, 16, 20, 24, 28]
 
 Months = {}
 Mappings = {}
-# Mappings['jan'] = 'dec'
-# Mappings['feb'] = 'jan'
-# Mappings['mar'] = 'feb'
-# Mappings['apr'] = 'mar'
-# Mappings['may'] = 'apr'
-# Mappings['jun'] = 'may'
-# Mappings['jul'] = 'jun'
-# Mappings['aug'] = 'jul'
-# Mappings['sep'] = 'aug'
-# Mappings['oct'] = 'sep'
-# Mappings['nov'] = 'oct'
-# Mappings['dec'] = 'nov'
 
 # start of Months Dictionary; this is important to maintain due to the need to report given months performace versus perfomrance from past
 # period's report
-
-# Months['jan'] = [10, 9, 8]
-# Months['feb'] = [11, 10, 9]
-# Months['mar'] = [0, 11, 10]
-# Months['apr'] = [0, 1, 11]
-# Months['may'] = [0, 1, 2]
-# Months['jun'] = [1, 2, 3]
-# Months['jul'] = [2, 3, 4]
-# Months['aug'] = [3, 4, 5]
-# Months['sep'] = [4, 5, 6]
-# Months['oct'] = [5, 6, 7]
-# Months['nov'] = [6, 7, 8]
-# Months['dec'] = [7, 8, 9]
 
 # starting to change from past months report comparison to previous year's
 # report, in the same period.
 # hence the need to change Months and Mappings above.
 
-Mappings['jan'] = 'pst'
-Mappings['feb'] = 'pst'
-Mappings['mar'] = 'pst'
-Mappings['apr'] = 'pst'
-Mappings['may'] = 'pst'
-Mappings['jun'] = 'pst'
-Mappings['jul'] = 'pst'
-Mappings['aug'] = 'pst'
-Mappings['sep'] = 'pst'
-Mappings['oct'] = 'pst'
-Mappings['nov'] = 'pst'
-Mappings['dec'] = 'pst'
+# 'index' below refers to the location within the .csv download
+# the srting 'pst' standing for past, represents the previous years
+# data. |_0_|_1_|_2_|_3_|_4_|_5_| is an example of the array objext 
+# data. index  0-2 represents the past year, whereas 3-5 represents 
+# the present year.
 
-Months['jan'] = [3, 4, 5]
-Months['feb'] = [3, 4, 5]
-Months['mar'] = [3, 4, 5]
-Months['apr'] = [3, 4, 5]
-Months['may'] = [3, 4, 5]
-Months['jun'] = [3, 4, 5]
-Months['jul'] = [3, 4, 5]
-Months['aug'] = [3, 4, 5]
-Months['sep'] = [3, 4, 5]
-Months['oct'] = [3, 4, 5]
-Months['nov'] = [3, 4, 5]
-Months['dec'] = [3, 4, 5]
+Mappings['index'] = 'pst'
+
+Months['index'] = [3, 4, 5]
 Months['pst'] = [0, 1, 2]
 
 # To handle Json in DB well
@@ -168,7 +127,7 @@ def save_facility_record(conn, cur, fuuid, record):
         conn.commit()
 
 
-def CombinedReport(id, interval, tree):
+def CombinedReport(id, interval='index', tree):
     """CombinedReport(id,interval)-- This takes an id and interval interms of shorthand
     months of the year --E.g CombinedReport('cK5zkZIUFsN','jan')"""
     mytype = tree['ANC'][id]
@@ -308,7 +267,7 @@ def CombinedReport(id, interval, tree):
     truesum_complete = float(truesum / 12) * 100
     RankDict = {}
     RankInitial = []
-    RankInitial.append(ANC_reportRank(id, interval, tree))
+    RankInitial.append(ANC_reportRank(id, interval='index', tree))
     # The rank of id is first added to the RankInitial List, later to be de-duplicated..
     # since the loop in row 204 runs for all id's including the id we just submitted.
     # considering the rank method returns ranks by position, id's rank is thus read off...
@@ -320,7 +279,7 @@ def CombinedReport(id, interval, tree):
     k = result.shape[0]
     for j in range(k):
         p = result.values[j][0]
-        RankDict[p] = ANC_reportRank(p, interval, tree)
+        RankDict[p] = ANC_reportRank(p, interval='index', tree)
         total += 1
     del RankDict[id]
     RankList = RankDict.values()
@@ -338,7 +297,7 @@ xrand = np.random.randint(1, 5, size=1)
 randomdict = {1: 'ANC', 2: 'ANC', 3: 'Deliv', 4: 'PVC'}
 
 
-def ANC_reportRank(id, interval, tree):
+def ANC_reportRank(id, interval='index', tree):
     """ANC_reportRank(id,interval, tree)-- This takes an id and interval interms of shorthand "
     months of the year --E.g ANC_reportRank('cK5zkZIUFsN','jan', WholeTree)"""
     # Given the change proposed by Zac, i.e randomization of comparison variables, need arose
@@ -463,7 +422,7 @@ def ReportFormat(key, period, tree, group):
     return ret
 
 
-def Ranking(a, b, tree):
+def Ranking(a, b='index', tree):
     RankDict = {}
     RankInitial = []
     RankInitial.append(ANC_reportRank(a, b, tree))
