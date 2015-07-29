@@ -17,38 +17,72 @@ passwd = config['dhis2_passwd']
 # the month for which we're generating the reports
 current_month = datetime.datetime.now().strftime('%B').lower()[:3]
 
-ancList = [1, 2, 5, 6, 9, 10, 13, 14, 17, 18, 21, 22, 25, 26, 29, 30, 33, 34, 37, 38, 41, 42, 45, 46]
-delivList = [3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47]
-pvcList = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48]
+# Please note ancList below contains colum numbers of both anc 1st visit and anc 4th visit.
+ancList = [1, 2, 5, 6, 9, 10, 13, 14, 17, 18, 21, 22, 25, 26]
+delivList = [3, 7, 11, 15, 19, 23, 27]
+pvcList = [4, 8, 12, 16, 20, 24, 28]
 
 Months = {}
 Mappings = {}
-Mappings['jan'] = 'dec'
-Mappings['feb'] = 'jan'
-Mappings['mar'] = 'feb'
-Mappings['apr'] = 'mar'
-Mappings['may'] = 'apr'
-Mappings['jun'] = 'may'
-Mappings['jul'] = 'jun'
-Mappings['aug'] = 'jul'
-Mappings['sep'] = 'aug'
-Mappings['oct'] = 'sep'
-Mappings['nov'] = 'oct'
-Mappings['dec'] = 'nov'
+# Mappings['jan'] = 'dec'
+# Mappings['feb'] = 'jan'
+# Mappings['mar'] = 'feb'
+# Mappings['apr'] = 'mar'
+# Mappings['may'] = 'apr'
+# Mappings['jun'] = 'may'
+# Mappings['jul'] = 'jun'
+# Mappings['aug'] = 'jul'
+# Mappings['sep'] = 'aug'
+# Mappings['oct'] = 'sep'
+# Mappings['nov'] = 'oct'
+# Mappings['dec'] = 'nov'
+
 # start of Months Dictionary; this is important to maintain due to the need to report given months performace versus perfomrance from past
 # period's report
-Months['jan'] = [10, 9, 8]
-Months['feb'] = [11, 10, 9]
-Months['mar'] = [0, 11, 10]
-Months['apr'] = [0, 1, 11]
-Months['may'] = [0, 1, 2]
-Months['jun'] = [1, 2, 3]
-Months['jul'] = [2, 3, 4]
+
+# Months['jan'] = [10, 9, 8]
+# Months['feb'] = [11, 10, 9]
+# Months['mar'] = [0, 11, 10]
+# Months['apr'] = [0, 1, 11]
+# Months['may'] = [0, 1, 2]
+# Months['jun'] = [1, 2, 3]
+# Months['jul'] = [2, 3, 4]
+# Months['aug'] = [3, 4, 5]
+# Months['sep'] = [4, 5, 6]
+# Months['oct'] = [5, 6, 7]
+# Months['nov'] = [6, 7, 8]
+# Months['dec'] = [7, 8, 9]
+
+# starting to change from past months report comparison to previous year's
+# report, in the same period.
+# hence the need to change Months and Mappings above.
+
+Mappings['jan'] = 'pst'
+Mappings['feb'] = 'pst'
+Mappings['mar'] = 'pst'
+Mappings['apr'] = 'pst'
+Mappings['may'] = 'pst'
+Mappings['jun'] = 'pst'
+Mappings['jul'] = 'pst'
+Mappings['aug'] = 'pst'
+Mappings['sep'] = 'pst'
+Mappings['oct'] = 'pst'
+Mappings['nov'] = 'pst'
+Mappings['dec'] = 'pst'
+
+Months['jan'] = [3, 4, 5]
+Months['feb'] = [3, 4, 5]
+Months['mar'] = [3, 4, 5]
+Months['apr'] = [3, 4, 5]
+Months['may'] = [3, 4, 5]
+Months['jun'] = [3, 4, 5]
+Months['jul'] = [3, 4, 5]
 Months['aug'] = [3, 4, 5]
-Months['sep'] = [4, 5, 6]
-Months['oct'] = [5, 6, 7]
-Months['nov'] = [6, 7, 8]
-Months['dec'] = [7, 8, 9]
+Months['sep'] = [3, 4, 5]
+Months['oct'] = [3, 4, 5]
+Months['nov'] = [3, 4, 5]
+Months['dec'] = [3, 4, 5]
+Months['pst'] = [0, 1, 2]
 
 # To handle Json in DB well
 psycopg2.extras.register_default_json(loads=lambda x: x)
@@ -147,8 +181,9 @@ def CombinedReport(id, interval, tree):
     for i in Months[interval]:
         x += remapped[i]
     A = x
-    # adding in line 128 to line 133 to differenciate ANC1stvisit ....
+    # adding in 6 lines below to differenciate ANC1stvisit ....
     # from ANC4th Visit
+    alpha = 0
     for i in range(1, len(mytype), 2):
         mynewtype1st.append(mytype[i])
     auxlist = np.nan_to_num(mynewtype1st)
@@ -168,9 +203,9 @@ def CombinedReport(id, interval, tree):
     for i in Months[Mappings[interval]]:
         xComp += remapped[i]
     B = xComp
-    if A > 0:
-        ANC4thCompare = (float(B - A) / A) * 100
-    elif B > 0:
+    if B > 0:
+        ANC4thCompare = (float(A - B) / B) * 100
+    elif A > 0:
         ANC4thCompare = 100
     else:
         ANC4thCompare = 0
@@ -181,6 +216,12 @@ def CombinedReport(id, interval, tree):
     for i in Months[Mappings[interval]]:
         xcomp1st += auxremapped[i]
     anc_comp = xcomp1st
+    if anc_comp > 0:
+        ANC1stCompare = (float(anc_alpha - anc_comp) / anc_comp) * 100
+    elif anc_alpha > 0:
+        ANC1stCompare = 100
+    else:
+        ANC1stCompare = 0
 # start of completeness report for ANC
     mytype = tree['ANC'][id]
     mynewtype = []
@@ -216,7 +257,7 @@ def CombinedReport(id, interval, tree):
         x += remapped[i]
     E = x
     if E > 0:
-        PVCCompare = (float(E - D) / D) * 100
+        PVCCompare = (float(D - E) / E) * 100
     elif D > 0:
         PVCCompare = 100
     else:
@@ -244,9 +285,9 @@ def CombinedReport(id, interval, tree):
     for i in Months[Mappings[interval]]:
         x += remapped[i]
     H = x
-    if G > 0:
-        DelivCompare = (float(H - G) / G) * 100
-    elif H > 0:
+    if H > 0:
+        DelivCompare = (float(G - H) / H) * 100
+    elif G > 0:
         DelivCompare = 100
     else:
         DelivCompare = 0
@@ -290,7 +331,7 @@ def CombinedReport(id, interval, tree):
     J = RankFinal
     K = total
     L = ord(J), ':of', K
-    return A, anc_alpha, D, G, truesum_complete, L
+    return A, anc_alpha, D, G, truesum_complete, L, DelivCompare, PVCCompare, ANC1stCompare, ANC4thCompare
 
 
 xrand = np.random.randint(1, 5, size=1)
@@ -309,6 +350,7 @@ def ANC_reportRank(id, interval, tree):
     mynewtype = []
     Q = 0
     P = 0
+    xp = 0
     if xrand[0] == 1:
         xrandaplha = 0
         for i in range(xrandaplha, len(mytype), 2):
