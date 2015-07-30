@@ -18,9 +18,9 @@ passwd = config['dhis2_passwd']
 current_month = datetime.datetime.now().strftime('%B').lower()[:3]
 
 # Please note ancList below contains colum numbers of both anc 1st visit and anc 4th visit.
-ancList = [1, 2, 5, 6, 9, 10, 13, 14, 17, 18, 21, 22, 25, 26]
-delivList = [3, 7, 11, 15, 19, 23, 27]
-pvcList = [4, 8, 12, 16, 20, 24, 28]
+ancList = [5, 6, 9, 10, 13, 14, 17, 18, 21, 22, 25, 26]
+delivList = [7, 11, 15, 19, 23, 27]
+pvcList = [8, 12, 16, 20, 24, 28]
 
 Months = {}
 Mappings = {}
@@ -52,7 +52,7 @@ def generate_period_string():
     """Return 3 months period string for both the current report
     and similar report a year ago
     e.g 201404;201405;201406;201504;201505;201506 for July 2015"""
-    t = datetime.now()
+    t = datetime.datetime.now()
     year = t.year
     month = t.month
     if month <= 3:
@@ -127,9 +127,10 @@ def save_facility_record(conn, cur, fuuid, record):
         conn.commit()
 
 
-def CombinedReport(id, interval='index', tree):
-    """CombinedReport(id,interval)-- This takes an id and interval interms of shorthand
-    months of the year --E.g CombinedReport('cK5zkZIUFsN','jan')"""
+def CombinedReport(id, tree):
+    """CombinedReport(id,tree)-- This takes an id and returns the ANC1st, ANC4th
+    PVC, Deliveries score, as well as comparisons to previous year period
+    """
     mytype = tree['ANC'][id]
     mynewtype = []
     mynewtype1st = []
@@ -137,7 +138,7 @@ def CombinedReport(id, interval='index', tree):
     for i in range(0, len(mytype), 2):
         mynewtype.append(mytype[i])
     remapped = np.nan_to_num(mynewtype)
-    for i in Months[interval]:
+    for i in Months['index']:
         x += remapped[i]
     A = x
     # adding in 6 lines below to differenciate ANC1stvisit ....
@@ -146,7 +147,7 @@ def CombinedReport(id, interval='index', tree):
     for i in range(1, len(mytype), 2):
         mynewtype1st.append(mytype[i])
     auxlist = np.nan_to_num(mynewtype1st)
-    for i in Months[interval]:
+    for i in Months['index']:
         alpha += auxlist[i]
     anc_alpha = alpha
 # start of comparison report bit of the function; that is ANC1st ...
@@ -159,7 +160,7 @@ def CombinedReport(id, interval='index', tree):
     for i in range(0, len(mytypeComp), 2):
         mynewtypeComp.append(mytypeComp[i])
     remapped = np.nan_to_num(mynewtypeComp)
-    for i in Months[Mappings[interval]]:
+    for i in Months[Mappings['index']]:
         xComp += remapped[i]
     B = xComp
     if B > 0:
@@ -172,7 +173,7 @@ def CombinedReport(id, interval='index', tree):
     for i in range(1, len(mytypeComp), 2):
         mynewtypeComp1st.append(mytypeComp[i])
     auxremapped = np.nan_to_num(mynewtypeComp1st)
-    for i in Months[Mappings[interval]]:
+    for i in Months[Mappings['index']]:
         xcomp1st += auxremapped[i]
     anc_comp = xcomp1st
     if anc_comp > 0:
@@ -191,28 +192,28 @@ def CombinedReport(id, interval='index', tree):
     for i in range(0, len(mytype), 2):
         mynewtype.append(mytype[i])
     remapped = np.isnan(mynewtype)
-    for i in Months[interval]:
+    for i in Months['index']:
         truetest.append(remapped[i])
     remappednum = truetest.count(False)
     C = remappednum
     for i in range(1, len(mytype), 2):
         mynewtypecomplete.append(mytype[i])
     remappedcomplete = np.isnan(mynewtype)
-    for i in Months[interval]:
+    for i in Months['index']:
         truetest1st.append(remapped[i])
     remappednumcomplete = truetest1st.count(False)
     C_complete = remappednumcomplete
     mytype = tree['PVC'][id]
     x = 0
     remapped = np.nan_to_num(mytype)
-    for i in Months[interval]:
+    for i in Months['index']:
         x += remapped[i]
     D = x
 # start of comparison of PVC past Month's report
     mytype = tree['PVC'][id]
     x = 0
     remapped = np.nan_to_num(mytype)
-    for i in Months[Mappings[interval]]:
+    for i in Months[Mappings['index']]:
         x += remapped[i]
     E = x
     if E > 0:
@@ -227,21 +228,21 @@ def CombinedReport(id, interval='index', tree):
     x = 0.0000
     remapped = np.isnan(mytype)
     remapped = list(remapped)
-    for i in Months[interval]:
+    for i in Months['index']:
         truetest.append(remapped[i])
     x = truetest.count(False)
     F = x
     mytype = tree['Deliv'][id]
     x = 0
     remapped = np.nan_to_num(mytype)
-    for i in Months[interval]:
+    for i in Months['index']:
         x += remapped[i]
     G = x
 # start of comparison for the Past Months Deliveries report
     mytype = tree['Deliv'][id]
     x = 0
     remapped = np.nan_to_num(mytype)
-    for i in Months[Mappings[interval]]:
+    for i in Months[Mappings['index']]:
         x += remapped[i]
     H = x
     if H > 0:
@@ -256,7 +257,7 @@ def CombinedReport(id, interval='index', tree):
     x = 0.0000
     remapped = np.isnan(mytype)
     remapped = list(remapped)
-    for i in Months[interval]:
+    for i in Months['index']:
         truetest.append(remapped[i])
     x = truetest.count(False)
     I = x
@@ -267,7 +268,7 @@ def CombinedReport(id, interval='index', tree):
     truesum_complete = float(truesum / 12) * 100
     RankDict = {}
     RankInitial = []
-    RankInitial.append(ANC_reportRank(id, interval='index', tree))
+    RankInitial.append(ANC_reportRank(id, tree))
     # The rank of id is first added to the RankInitial List, later to be de-duplicated..
     # since the loop in row 204 runs for all id's including the id we just submitted.
     # considering the rank method returns ranks by position, id's rank is thus read off...
@@ -279,7 +280,7 @@ def CombinedReport(id, interval='index', tree):
     k = result.shape[0]
     for j in range(k):
         p = result.values[j][0]
-        RankDict[p] = ANC_reportRank(p, interval='index', tree)
+        RankDict[p] = ANC_reportRank(p, tree)
         total += 1
     del RankDict[id]
     RankList = RankDict.values()
@@ -297,9 +298,9 @@ xrand = np.random.randint(1, 5, size=1)
 randomdict = {1: 'ANC', 2: 'ANC', 3: 'Deliv', 4: 'PVC'}
 
 
-def ANC_reportRank(id, interval='index', tree):
-    """ANC_reportRank(id,interval, tree)-- This takes an id and interval interms of shorthand "
-    months of the year --E.g ANC_reportRank('cK5zkZIUFsN','jan', WholeTree)"""
+def ANC_reportRank(id, tree):
+    """ANC_reportRank(id, tree)-- This takes an id and interval interms of shorthand "
+    months of the year --E.g ANC_reportRank('cK5zkZIUFsN', WholeTree)"""
     # Given the change proposed by Zac, i.e randomization of comparison variables, need arose
     # to add a few lines to generate a random number.
     # As you may notice from above, key 1, and 2 of the dict refer to the same value...
@@ -315,9 +316,9 @@ def ANC_reportRank(id, interval='index', tree):
         for i in range(xrandaplha, len(mytype), 2):
             mynewtype.append(mytype[i])
         remapped = np.nan_to_num(mynewtype)
-        for i in Months[interval]:
+        for i in Months['index']:
             Q += remapped[i]
-        for i in Months[Mappings[interval]]:
+        for i in Months[Mappings['index']]:
             xp += remapped[i]
         if xp > 0:
             Compare = (float(Q - xp) / xp) * 100
@@ -331,9 +332,9 @@ def ANC_reportRank(id, interval='index', tree):
         for i in range(xrandaplha, len(mytype), 2):
             mynewtype.append(mytype[i])
         remapped = np.nan_to_num(mynewtype)
-        for i in Months[interval]:
+        for i in Months['index']:
             Q += remapped[i]
-        for i in Months[Mappings[interval]]:
+        for i in Months[Mappings['index']]:
             xp += remapped[i]
         if xp > 0:
             Compare = (float(Q - xp) / xp) * 100
@@ -344,9 +345,9 @@ def ANC_reportRank(id, interval='index', tree):
         Q = Compare
     else:
         remapped = np.nan_to_num(mytype)
-        for i in Months[interval]:
+        for i in Months['index']:
             P += remapped[i]
-        for i in Months[Mappings[interval]]:
+        for i in Months[Mappings['index']]:
             xp += remapped[i]
         if xp > 0:
             Compare = (float(P - xp) / xp) * 100
@@ -369,34 +370,31 @@ IntroText2 = (
     " in the subcounty.\nWork to improve your facility every day, we'll be watching!")
 
 
-def ReportFormat(key, period, tree, group):
-    ANCScore = CombinedReport(key, period, tree)[0]
-    PCVScore = CombinedReport(key, period, tree)[4]
-    DelivScore = CombinedReport(key, period, tree)[7]
-    Reporting = (
-        (
-            CombinedReport(key, period, tree)[2] + CombinedReport(key, period, tree)[5] +
-            CombinedReport(key, period, tree)[8]) / 300) * 100
+def ReportFormat(key, tree, group):
+    # A, anc_alpha, D, G, truesum_complete, L, DelivCompare, PVCCompare, ANC1stCompare, ANC4thCompare
+    ANCScore = CombinedReport(key, tree)[1]
+    ANC4thscore = CombinedReport(key, tree)[0]
+    PCVScore = CombinedReport(key, tree)[2]
+    DelivScore = CombinedReport(key, tree)[3]
     TotalScore = ANCScore + PCVScore + DelivScore
-    RankPosition = CombinedReport(key, period, tree)[9][0]
-    # RankPositionOf = CombinedReport(key, period, tree)[9][1]
-    # RankPositionTot = CombinedReport(key, period, tree)[9][2]
-    RankPositionval = int(Ranking(key, period, tree))
-    ANCScorePast = CombinedReport(key, period, tree)[1]
-    PCVScorePast = CombinedReport(key, period, tree)[5]
-    DelivScorePast = CombinedReport(key, period, tree)[8]
-    TotalScorePast = ANCScorePast + PCVScorePast + DelivScorePast
+    RankPosition = CombinedReport(key, tree)[5][0]
+    RankPositionval = int(Ranking(key, tree))
+    ANCScoreCompare = CombinedReport(key, tree)[8]
+    ANCScore4thCompare = CombinedReport(key, tree)[9]
+    PCVScoreCompare = CombinedReport(key, tree)[7]
+    DelivScoreCompare = CombinedReport(key, tree)[6]
+    completenesswatch = CombinedReport(key, tree)[4]
     ret = {
         'month': current_month.capitalize(),
         'total_score': float(TotalScore.__format__('.2f')),
         'anc_score': float(ANCScore.__format__('.2f')),
         'delivery_score': float(DelivScore.__format__('.2f')),
         'pcv_score': float(PCVScore.__format__('.2f')),
-        'reporting_rate': float(Reporting.__format__('.2f')),
+        'reporting_rate': float(completenesswatch.__format__('.2f')),
         'position': RankPosition,
         'comment': ''
     }
-    if group == 1:
+    '''if group == 1:
         if TotalScorePast < TotalScore:
             ret['comment'] = config["positive_comment"]
         else:
@@ -418,14 +416,14 @@ def ReportFormat(key, period, tree, group):
             else:
                 ret['comment'] = config["no_report_comment"]
     else:
-        pass
+        pass'''
     return ret
 
 
-def Ranking(a, b='index', tree):
+def Ranking(a, tree):
     RankDict = {}
     RankInitial = []
-    RankInitial.append(ANC_reportRank(a, b, tree))
+    RankInitial.append(ANC_reportRank(a, tree))
     c = RowToSub[a]
     total = 0.00
     for i in check:
@@ -433,7 +431,7 @@ def Ranking(a, b='index', tree):
     k = result.shape[0]
     for j in range(k):
         p = result.values[j][0]
-        RankDict[p] = ANC_reportRank(p, b, tree)
+        RankDict[p] = ANC_reportRank(p, tree)
         total += 1
     del RankDict[a]
     RankList = RankDict.values()
@@ -478,21 +476,21 @@ for r in res:
     for i in range(myrows):
         Mylist = []
         for v in ancList:
-            v += 3            # This additional line caters for the comment 3 above
+            v -= 1
             Mylist.append(value.values[i][v])
         Mydict[value.values[i][0]] = Mylist
     # Now we will consider the Deliveries in Unit data
     for i in range(myrows):
         Mylist = []
         for v in delivList:
-            v += 3
+            v -= 1
             Mylist.append(value.values[i][v])
         Mydict1[value.values[i][0]] = Mylist
     # We'll now consider PVC data
     for i in range(myrows):
         Mylist = []
         for v in pvcList:
-            v += 3
+            v -= 1
             Mylist.append(value.values[i][v])
         Mydict2[value.values[i][0]] = Mylist
     # for reporting purposes, we'll have all this data organised into a
@@ -519,7 +517,7 @@ for r in res:
                 facility_uuid = ''
         # only generate report if we have a valid facility uuid
         if facility_uuid:
-            report = ReportFormat(facilityid, current_month, WholeTree, 2)
+            report = ReportFormat(facilityid, WholeTree, 2)
             message = config["facility_report_template"] % report
             params = {
                 'fuuid': facility_uuid,
@@ -528,7 +526,7 @@ for r in res:
                 'password': config['smspasswd'],
                 'district': r["name"],
             }
-            send_facility_sms(params)
+            # send_facility_sms(params)
             save_facility_record(conn, cur, facility_uuid, report)
 
 conn.close()
