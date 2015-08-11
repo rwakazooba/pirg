@@ -10,12 +10,34 @@ import psycopg2
 import psycopg2.extras
 import json
 import simplejson
+import re
 
 user = config['dhis2_user']
 passwd = config['dhis2_passwd']
 
 # the month for which we're generating the reports
 current_month = datetime.datetime.now().strftime('%B').lower()[:3]
+pattern1 = re.compile(r'(HC III$)|(III$)|((.*\b) III (.*\b))')
+pattern5 = re.compile(r'(HC II$)')
+pattern6 = re.compile(r'(II$)')
+pattern7 = re.compile(r'((.*) II (.*))')
+
+def HCIII_reg(s):
+    flag = pattern1.search(s)
+    if flag:
+        return True
+    else:
+        return False
+
+def HCII_reg(s):
+    if pattern5.search(s):
+        return True
+    elif pattern6.search(s) and not(HCIII_reg(s)):
+        return True
+    elif pattern7.search(s) and not(HCIII_reg(s)):
+        return True
+    else:
+        return False
 
 # Please note ancList below contains colum numbers of both anc 1st visit and anc 4th visit.
 ancList = [5, 6, 9, 10, 13, 14, 17, 18, 21, 22, 25, 26]
@@ -450,6 +472,10 @@ cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 cur.execute("SELECT dhis2id, name FROM districts WHERE eligible = 't'")
 res = cur.fetchall()
 
+
+
+
+
 # for r in ["x75Yh65MaUa"]:
 for r in res:
     value = read_csv_to_file(BASE_URL % r["dhis2id"])
@@ -458,6 +484,13 @@ for r in res:
     # computing the number of rows present in the data set, later to be used the ranking
     myrows = value.shape[0]
     # line0 = value.values[myrows][0]
+    for i in range(myrows):
+        if HCII_reg(value.loc[i,'organisationunitname']):
+            value.loc[i,'organisationunitname'] = value.loc[i,'organisationunitname'].replace(value.loc[i,'organisationunitname'], "HC II")
+        elif HCIII_reg(value['organisationunitname'][i]):
+            value.loc[i,'organisationunitname'] = value.loc[i,'organisationunitname'].replace(value.loc[i,'organisationunitname'], "HC III")
+        else:
+            pass
     check = value.groupby(value['organisationunitname'])
     RowToSub = {}
     for i in range(myrows):
